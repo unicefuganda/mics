@@ -1077,3 +1077,58 @@ class USSDTest(USSDBaseTest):
                 response_string = "responseString=%s&action=request" % (sub_question_1.text)
                 self.assertEquals(urllib2.unquote(response.content), response_string)
                 self.assertNotIn("INVALID ANSWER", urllib2.unquote(response.content))
+
+    def test_should_not_repeat_question_after_answer_has_been_given_the_answer_rule_is_not_repeat(self):
+        HouseholdMember.objects.create(surname="Surname", household=self.household, date_of_birth='1980-02-03')
+        question_1 = Question.objects.create(text="Question 1- with Skip logic",
+                                             answer_type=Question.MULTICHOICE, order=1, group=self.member_group)
+
+        option_1 = QuestionOption.objects.create(question=question_1, text="OPTION 1", order=1)
+        option_2 = QuestionOption.objects.create(question=question_1, text="OPTION 2", order=2)
+        option_3 = QuestionOption.objects.create(question=question_1, text="specify", order=3)
+
+        question_2 = Question.objects.create(text="question 2 - skipped",
+                                             answer_type=Question.TEXT, order=2, group=self.member_group)
+
+        question_3 = Question.objects.create(text="question 3 - skipped to",
+                                             answer_type=Question.TEXT, order=3, group=self.member_group)
+
+        question_4 = Question.objects.create(text="question 4",
+                                             answer_type=Question.NUMBER, order=4, group=self.member_group)
+
+        BatchQuestionOrder.objects.create(batch=self.batch, question=question_1, order=1)
+        BatchQuestionOrder.objects.create(batch=self.batch, question=question_2, order=2)
+        BatchQuestionOrder.objects.create(batch=self.batch, question=question_3, order=3)
+        BatchQuestionOrder.objects.create(batch=self.batch, question=question_4, order=4)
+
+        self.batch.questions.add(question_1, question_2, question_3, question_4)
+
+        AnswerRule.objects.create(question=question_1, action=AnswerRule.ACTIONS['SKIP_TO'],
+                                  condition=AnswerRule.CONDITIONS['EQUALS_OPTION'], validate_with_option=option_3,
+                                  next_question=question_3)
+
+        mock_filter = MagicMock()
+        mock_filter.exists.return_value = True
+        with patch.object(RandomHouseHoldSelection.objects, 'filter', return_value=mock_filter):
+            with patch.object(Survey, "currently_open_survey", return_value=self.open_survey):
+                with patch.object(USSDSurvey, 'is_active', return_value=False):
+                    self.reset_session()
+
+                self.choose_menu_to_take_survey()
+                self.select_household()
+
+                response = self.select_household_member()
+                page_1 = "%s\n1: %s\n2: %s\n3: %s" % (question_1.text, option_1.text, option_2.text, option_3.text)
+
+                response_string = "responseString=%s&action=request" % page_1
+                self.assertEquals(urllib2.unquote(response.content), response_string)
+
+                response = self.respond("3")
+
+                response_string = "responseString=%s&action=request" % question_3.text
+                self.assertEquals(urllib2.unquote(response.content), response_string)
+
+                response = self.respond("akampa")
+
+                response_string = "responseString=%s&action=request" % question_4.text
+                self.assertEquals(urllib2.unquote(response.content), response_string)
