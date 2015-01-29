@@ -23,7 +23,6 @@ class USSDRegisterHousehold(USSD):
         self.is_selecting_member = False
         self.set_question()
         self.set_form_in_cache()
-        self.set_household()
         self.set_household_member()
         self.set_head_in_cache()
         self.set_is_selecting_member()

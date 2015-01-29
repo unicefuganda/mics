@@ -19,7 +19,7 @@ class RandomHouseHoldSelection(BaseModel):
 
     def generate_new_list(self, survey):
         if survey.has_sampling:
-            selected_households = random.sample(list(range(1, self.no_of_households + 1)), NUMBER_OF_HOUSEHOLD_PER_INVESTIGATOR)
+            selected_households = random.sample(range(1, self.no_of_households + 1), NUMBER_OF_HOUSEHOLD_PER_INVESTIGATOR)
             selected_households.sort()
         else:
             selected_households = range(1, self.no_of_households + 1)

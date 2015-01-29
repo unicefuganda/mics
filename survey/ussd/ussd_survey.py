@@ -8,14 +8,7 @@ class USSDSurvey(USSD):
     def __init__(self, investigator, request):
         super(USSDSurvey, self).__init__(investigator, request)
         self.current_member_is_done = False
-        self.is_resuming_survey = False
         self.is_registering_household = False
-        self.set_session()
-        self.set_household()
-        self.set_household_member()
-        self.set_current_member_is_done()
-        self.set_is_resuming_survey()
-        self.clean_investigator_input()
 
     def process_investigator_response(self, batch):
         answer = self.request['ussdRequestString'].strip()

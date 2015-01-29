@@ -222,7 +222,7 @@ class Household(BaseModel):
 
     @classmethod
     def next_uid(cls, survey=None):
-        all_households = Household.objects.filter(survey=survey) if survey else Household.objects.filter()
+        all_households = Household.objects.filter(survey=survey) if survey else Household.objects.all()
         return (all_households.order_by('uid').reverse()[0].uid + 1) if all_households else 1
 
     @classmethod
