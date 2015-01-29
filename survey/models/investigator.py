@@ -109,13 +109,16 @@ class Investigator(BaseModel):
                                              answer=answer, household=household_member.household, batch=batch)
 
         if answer.pk:
-            next_question = household_member.next_question(question, batch, answer=answer)
-            if next_question is None:
-                household_member.batch_completed(batch)
-                next_batch = household_member.get_next_batch()
-                next_question = household_member.next_question_in_order(next_batch) if next_batch else None
-            return next_question
+            return self.next_question_if_answer_saved(household_member, question, batch, answer=answer)
         return question
+
+    def next_question_if_answer_saved(self, household_member, question, batch, answer=None):
+        next_question = household_member.next_question(question, batch, answer)
+        if next_question is None:
+            household_member.batch_completed(batch)
+            next_batch = household_member.get_next_batch()
+            next_question = household_member.next_question_in_order(next_batch) if next_batch else None
+        return next_question
 
     def last_answer_for(self, question):
         answer_class = question.answer_class()

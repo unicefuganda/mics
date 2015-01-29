@@ -65,24 +65,27 @@ class USSDSurvey(USSD):
             self.add_question_prefix()
             self.responseString += self.question.to_ussd(page)
 
+    def get_question_to_save_answer_against(self, household_member, current_batch):
+        last_answered_question = household_member.last_question_answered()
+        if last_answered_question:
+            return self.investigator.next_question_if_answer_saved(household_member, last_answered_question, current_batch)
+        return household_member.next_question_in_order(current_batch)
+
     def render_survey(self):
         household_member = self.household_member
         current_batch = household_member.get_next_batch()
-
         if current_batch:
-            self.question = household_member.next_question_in_order(current_batch)
+            self.question = self.get_question_to_save_answer_against(household_member, current_batch)
             if not self.is_new_request():
                 self.process_investigator_response(current_batch)
-
             self.render_survey_response(current_batch)
         else:
             self.end_interview(current_batch)
 
-    def render_resume_message(self, is_registering_household):
-        self.responseString = self.MESSAGES['RESUME_MESSAGE']
-        self.investigator.set_in_cache('IS_REGISTERING_HOUSEHOLD', is_registering_household)
+    def render_resume_message(self):
         self.action = self.ACTIONS['REQUEST']
         self.set_in_session('IS_RESUMING', True)
+        return self.MESSAGES['RESUME_MESSAGE']
 
     def render_welcome_text(self):
         if self.investigator.has_households():
@@ -268,7 +271,7 @@ class USSDSurvey(USSD):
             self.reset_cache()
             self.responseString = self.render_menu()
         else:
-            self.render_resume_message(self.is_registering_household)
+            self.responseString = self.render_resume_message()
         return self.action, self.responseString
 
     def behave_like_new_request(self):
