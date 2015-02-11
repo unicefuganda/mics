@@ -349,7 +349,7 @@ class HouseholdMember(BaseModel):
         member = self.get_member()
         try:
             if not answer:
-                answer = question.answer_class().objects.get(householdmember=member, question=question, batch=batch, is_old=False)
+                answer = question.answer_class().objects.filter(householdmember=member, question=question, batch=batch, is_old=False)[0];
             return question.get_next_question_by_rule(answer, self.household.investigator)
         except ObjectDoesNotExist, e:
             return self.next_question_in_order(batch, question)
