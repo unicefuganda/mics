@@ -14,7 +14,6 @@ class ResultsDownloadServiceTest(BaseTest):
         self.subcounty = LocationType.objects.create(name='Subcounty', slug='subcounty')
         self.parish = LocationType.objects.create(name='Parish', slug='parish')
         self.village = LocationType.objects.create(name='Village', slug='village')
-
         uganda = Location.objects.create(name="Uganda", type=self.country)
 
         LocationTypeDetails.objects.create(country=uganda, location_type=self.country)
